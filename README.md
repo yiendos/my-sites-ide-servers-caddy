@@ -18,6 +18,7 @@ not they've used Caddy before.
 - [Command reference](#command-reference)
 - [Configuration](#configuration)
 - [What it uses from the IDE](#what-it-uses-from-the-ide)
+- [Security](#security)
 - [Troubleshooting](#troubleshooting)
 - [Known gaps](#known-gaps)
 
@@ -57,7 +58,7 @@ host (my-sites-ide CLI)
   |- servers:caddy-start / -stop      --> docker compose up -d / stop caddy
   |- servers:caddy-trust              --> points at the local CA's root certificate, trusts it on macOS
 
-browser --https:9443--> caddy container (official caddy:2.x-alpine image, pinned in docker-compose.yml)
+browser --https:9443--> caddy container (official caddy:2.x-alpine image, pinned in the Dockerfile)
                           |- /etc/caddy/Caddyfile (conf/Caddyfile): the default site, then
                           |    import /opt/repos/*/_build/config/Caddyfile
                           |- /storage (storage/plugins/caddy/): the local CA and issued certificates
@@ -154,8 +155,8 @@ To change how Caddy behaves:
 - **All sites**: edit `conf/Caddyfile` in this package (global options, the default site) and run
   `servers:caddy-reload`. With a `Packages/` clone, that's your working copy; otherwise copy the
   change upstream, as `composer update` replaces `vendor/`.
-- **The Caddy version**: change the pinned `image:` tag in `docker-compose.yml`, then
-  `servers:caddy-start`.
+- **The Caddy version**: change the pinned `FROM` tag in the `Dockerfile`, then
+  `docker compose build caddy` and `servers:caddy-start`.
 
 ## What it uses from the IDE
 
@@ -164,8 +165,20 @@ To change how Caddy behaves:
 | `Repos/` | mounted at `/opt/repos` - the sites and their `Caddyfile`s |
 | `storage/plugins/caddy/` (`"storage": true`) | mounted at `/storage` - Caddy's local CA, certificates and autosaved config |
 | the `fpm` service (`fpm:9000`) | PHP, through `php_fastcgi {$FPM_HOST}` |
+| `NAMESPACE` (root `.env`) | the image name, `${NAMESPACE}_caddy` |
 | `IDE_ROOT` (set by the CLI and `_dev/cache/ide.env`) | reaching `Repos/` from `vendor/` |
 | the `my-sites-ide` network | reaching `fpm` |
+
+## Security
+
+The container runs as an unprivileged `caddy` user (uid/gid 10016, set in the `Dockerfile`), not
+as root like the official image does. Like the IDE's other servers, it uses a uid above 10000, so it
+can't match a real user on the host. Listening on 443 inside the container still works because the
+official `caddy` binary carries the `cap_net_bind_service` capability.
+
+Coming from a version that ran as root: `servers:caddy-start` builds the image and recreates the
+container. Your existing local CA in `storage/plugins/caddy/` is kept, so a CA you've already
+trusted stays trusted.
 
 ## Troubleshooting
 
@@ -195,8 +208,10 @@ the root `.env` and run `servers:caddy-start`.
 - One config file per site, always `Caddyfile` - see [Site config](#site-config).
 - Sites that predate the plugin need `servers:caddy-vhost <site>` run by hand; `site-created`
   only fires for new sites.
-- The container runs as root (the official image's default). On a Linux host, the files Caddy
-  writes in `storage/plugins/caddy/` are owned by root.
+- Only tested on Docker Desktop for Mac, where bind mounts ignore file ownership. On a Linux host,
+  `storage/plugins/caddy/` has to be writable by the container's user (uid 10016), e.g.
+  `sudo chown -R 10016:10016 storage/plugins/caddy` - which also means reading the root certificate
+  for `servers:caddy-trust` needs `sudo`.
 - Only HTTPS over TCP is published - no plain HTTP and no HTTP/3 (UDP 443).
 - Certificates from the certbot-cloudflare plugin (`storage/certificates/`) aren't mounted; sites
   use Caddy's local CA.
