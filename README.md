@@ -4,7 +4,7 @@
 serving every site in `Repos/` over HTTPS on port 9443 and handing PHP to the IDE's `fpm`
 container. Caddy issues each site's certificate from its own local certificate authority, so
 once you've trusted that CA, `https://<site>.localhost:9443` opens without a warning. It runs
-alongside the IDE's nginx (443) and the apache plugin (8443), or instead of them.
+alongside the [nginx plugin](https://github.com/yiendos/my-sites-ide-servers-nginx) (443) and the apache plugin (8443), or instead of them.
 
 Written for: developers running sites in my-sites-ide who want them served by Caddy, whether or
 not they've used Caddy before.
