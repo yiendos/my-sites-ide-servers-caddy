@@ -18,6 +18,12 @@ class CaddyVhostCommand extends Command
     private const PLACEHOLDER = '__PROJECT__';
 
     /**
+     * The placeholder replaced with the site's application code, relative to
+     * /opt/repos - Paths::siteApp(), e.g. example/deploy
+     */
+    private const APP_PLACEHOLDER = '__APP_PATH__';
+
+    /**
      * The ability to configure the console command
      *
      * @return void
@@ -66,7 +72,7 @@ class CaddyVhostCommand extends Command
 
         $sample = (string) file_get_contents(Paths::package('stubs/Caddyfile'));
 
-        file_put_contents($config, str_replace(self::PLACEHOLDER, $site, $sample));
+        file_put_contents($config, strtr($sample, [self::APP_PLACEHOLDER => Paths::siteApp($site), self::PLACEHOLDER => $site]));
 
         $io->writeln("<info>Created " . Paths::relative($config) . "</> - https://{$site}.localhost:" . (getenv('CADDY_PORT') ?: '9443') . " once caddy reloads (servers:caddy-reload).");
 

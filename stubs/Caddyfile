@@ -3,7 +3,7 @@
 https://__PROJECT__.localhost {
 	# a certificate from Caddy's local CA - trusted once you've run servers:caddy-trust
 	tls internal
-	root * /opt/repos/__PROJECT__/Sites/public
+	root * /opt/repos/__APP_PATH__/public
 	php_fastcgi {$FPM_HOST}
 	file_server
 	encode gzip
