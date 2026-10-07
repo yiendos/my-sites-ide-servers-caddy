@@ -1,0 +1,10 @@
+# Caddy config for __PROJECT__, from the my-sites-ide caddy plugin
+# (servers:caddy-vhost) - edit freely, then: php my-sites-ide servers:caddy-reload
+https://__PROJECT__.localhost {
+	# a certificate from Caddy's local CA - trusted once you've run servers:caddy-trust
+	tls internal
+	root * /opt/repos/__PROJECT__/Sites/public
+	php_fastcgi {$FPM_HOST}
+	file_server
+	encode gzip
+}

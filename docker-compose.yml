@@ -1,0 +1,25 @@
+services:
+    caddy:
+        container_name: "caddy"
+        image: caddy:2.11.7-alpine
+        ports:
+            - "${CADDY_PORT:-9443}:443"
+        environment:
+            FPM_HOST: "fpm:9000"
+            # Caddy's data (its local certificate authority, issued certificates) and autosaved
+            # config go in storage/plugins/caddy/, mounted at /storage by the IDE ("storage": true
+            # in composer.json) - so the CA you trust survives composer update and container rebuilds
+            XDG_DATA_HOME: /storage/data
+            XDG_CONFIG_HOME: /storage/config
+        volumes:
+            # Read-only config ships with the package; each site's own config is picked up from
+            # Repos/*/_build/config/Caddyfile (see the import at the end of conf/Caddyfile)
+            - ./conf/Caddyfile:/etc/caddy/Caddyfile:ro
+            - ${IDE_ROOT}/Repos:/opt/repos
+        networks:
+            - my-sites-ide
+
+    # started by `ide:spark` alongside APP (autostart: true in composer.json)
+    # PHP requests go to the IDE's fpm service, so that needs to be running too
+    # new sites get their config from `php my-sites-ide servers:caddy-vhost <site>`,
+    # run for you by ide:create-site / ide:repo-clone

@@ -1,0 +1,4 @@
+# [Caddy server]
+# The host port Caddy serves HTTPS on, defaults live in this plugin's .env (9443) -
+# nginx has 443 and the apache plugin 8443, so pick one nothing else publishes
+#CADDY_PORT=9443

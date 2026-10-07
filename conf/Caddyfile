@@ -1,0 +1,18 @@
+{
+	# HTTPS only - port 80 isn't published, so there's nothing to redirect from
+	auto_https disable_redirects
+	# the local CA can't be trusted from inside the container - see servers:caddy-trust
+	skip_install_trust
+}
+
+# the IDE's default site, as nginx and apache serve it
+https://localhost, https://default.localhost {
+	tls internal
+	root * /opt/repos/_default/deploy/public
+	php_fastcgi {$FPM_HOST}
+	file_server
+}
+
+# every site's own config - written by servers:caddy-vhost. One file per site: Caddy's
+# import allows a single * per pattern, so a site that needs more imports it from here
+import /opt/repos/*/_build/config/Caddyfile
