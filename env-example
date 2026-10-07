@@ -2,3 +2,7 @@
 # The host port Caddy serves HTTPS on, defaults live in this plugin's .env (9443) -
 # nginx has 443 and the apache plugin 8443, so pick one nothing else publishes
 #CADDY_PORT=9443
+# Where each site's application code lives, inside Repos/<site>/ - an IDE setting, shared by
+# every plugin: deploy (the default), Sites for the older layout, or . for the repository root.
+# New Caddy site config documents serve <app>/public. Existing ones aren't rewritten if you change it.
+#IDE_APP_DIR=deploy

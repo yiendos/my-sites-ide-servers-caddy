@@ -62,7 +62,7 @@ browser --https:9443--> caddy container (official caddy:2.x-alpine image, pinned
                           |- /etc/caddy/Caddyfile (conf/Caddyfile): the default site, then
                           |    import /opt/repos/*/_build/config/Caddyfile
                           |- /storage (storage/plugins/caddy/): the local CA and issued certificates
-                          |- static files served straight from /opt/repos/<site>/Sites/public
+                          |- static files served straight from /opt/repos/<site>/<IDE_APP_DIR>/public
                           |- *.php ---- php_fastcgi fpm:9000 ----> IDE fpm container
 ```
 
@@ -83,12 +83,12 @@ pattern, and the folder already uses it. A site that needs more can `import` fur
 its own `Caddyfile`.
 
 `ide:create-site` and `ide:repo-clone` create that file for you through this plugin's
-`site-created` hook. It copies `stubs/Caddyfile`, replacing `__PROJECT__` with the site name:
+`site-created` hook. It copies `stubs/Caddyfile`, replacing `__PROJECT__` with the site name and `__APP_PATH__` with its application folder (`<site>/<IDE_APP_DIR>`, e.g. `example/deploy`):
 
 ```
 https://<site>.localhost {
 	tls internal
-	root * /opt/repos/<site>/Sites/public
+	root * /opt/repos/<site>/<IDE_APP_DIR>/public
 	php_fastcgi {$FPM_HOST}
 	file_server
 	encode gzip
@@ -167,6 +167,7 @@ To change how Caddy behaves:
 | the `fpm` service (`fpm:9000`) | PHP, through `php_fastcgi {$FPM_HOST}` |
 | `NAMESPACE` (root `.env`) | the image name, `${NAMESPACE}_caddy` |
 | `IDE_ROOT` (set by the CLI and `_dev/cache/ide.env`) | reaching `Repos/` from `vendor/` |
+| `IDE_APP_DIR` (root `.env`, set by the CLI - `deploy` if it isn't) | the application folder in a new site's Caddyfile - `<app>/public` is the document root |
 | the `my-sites-ide` network | reaching `fpm` |
 
 ## Security
