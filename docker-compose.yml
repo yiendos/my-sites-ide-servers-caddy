@@ -1,7 +1,11 @@
 services:
     caddy:
         container_name: "caddy"
-        image: caddy:2.11.7-alpine
+        image: ${NAMESPACE}_caddy:latest
+        # the official caddy image, pinned in the Dockerfile, set to run as a non-root user
+        build:
+            context: .
+            dockerfile: Dockerfile
         ports:
             - "${CADDY_PORT:-9443}:443"
         environment:
